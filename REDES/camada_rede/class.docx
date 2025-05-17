@@ -1,0 +1,23 @@
+CAMADA DE REDE
+
+Time to live - Quantidade de saltos
+
+Tamanho de quadro 
+
+MTU - Maximum Transmission Unit 
+
+MF - More Fragments
+
+
+TODO Ipv4 é globalmente único desde que não esteja atrás de um NAT
+NAT ( Network Address Translation) - Mapeia um endereço IP privado para um endereço IP público.
+
+
+DC -> Domínio de Colisão
+DB -> Domínio de Broadcast
+
+
+    | HUB | SWITCH | ROTEADOR
+DC  |  1  |   N    |    N
+DB  |  1  |   1    |    N
+

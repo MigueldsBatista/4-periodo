@@ -1,0 +1,261 @@
+-- SCRIPT CRIAÇÃO
+CREATE DATABASE UNIVERSIDADE2;
+USE UNIVERSIDADE2; 
+
+CREATE TABLE curso (
+	codigo_curso INT,
+	nome VARCHAR(200) NOT NULL,
+	CONSTRAINT curso_pk PRIMARY KEY (codigo_curso)
+);
+
+CREATE TABLE projeto (
+	codigo_projeto INT,
+	titulo VARCHAR(30) NOT NULL,
+	conceito VARCHAR(7),
+	hp VARCHAR(50),
+	CONSTRAINT projeto_pk PRIMARY KEY (codigo_projeto),
+	CONSTRAINT projeto_conceito_ck CHECK (conceito IN ('BOM', 'RUIM', 'REGULAR'))
+);
+
+CREATE TABLE pessoa (
+	matricula_pessoa INT,
+	nome VARCHAR(50) NOT NULL,
+	sexo CHAR(1) NOT NULL,
+	CONSTRAINT pessoa_pk PRIMARY KEY (matricula_pessoa)
+);
+
+CREATE TABLE professor (
+	matricula_professor INT,
+	data_admissao DATE NOT NULL,
+	matricula_lider INT,
+	CONSTRAINT professor_pk PRIMARY KEY (matricula_professor),
+	CONSTRAINT professor_matricula_prof_fk FOREIGN KEY (matricula_professor) REFERENCES pessoa (matricula_pessoa),
+	CONSTRAINT professor_matricula_lider_fk FOREIGN KEY (matricula_lider) REFERENCES professor (matricula_professor)
+);
+
+CREATE TABLE disciplina (
+	codigo_disciplina INT,
+	ementa VARCHAR(50) NOT NULL,
+	conteudo_programatico VARCHAR(100) NOT NULL,
+	matricula_professor INT NOT NULL,
+	CONSTRAINT disciplina_pk PRIMARY KEY (codigo_disciplina),
+	CONSTRAINT disciplina_matricula_prof_fk FOREIGN KEY (matricula_professor) REFERENCES professor (matricula_professor)
+);
+
+
+CREATE TABLE turma (
+	codigo_disciplina INT,
+	codigo_curso INT,
+	ano_semestre VARCHAR(6),
+	CONSTRAINT turma_pk PRIMARY KEY (codigo_disciplina,codigo_curso,ano_semestre),
+	CONSTRAINT turma_codigo_disciplina_fk FOREIGN KEY (codigo_disciplina) REFERENCES disciplina (codigo_disciplina),
+	CONSTRAINT turma_codigo_curso_fk FOREIGN KEY (codigo_curso) REFERENCES curso (codigo_curso),
+	CONSTRAINT turma_ano_semestre_ck CHECK (ano_semestre LIKE '____._')
+);
+
+CREATE TABLE ministra (
+	codigo_disciplina INT,
+	codigo_curso INT,
+	ano_semestre VARCHAR(6),
+	matricula_professor INT,
+	CONSTRAINT ministra_pk PRIMARY KEY (codigo_disciplina,codigo_curso,ano_semestre,matricula_professor),
+	CONSTRAINT ministra_turma_fk FOREIGN KEY (codigo_disciplina,codigo_curso,ano_semestre) REFERENCES turma (codigo_disciplina,codigo_curso,ano_semestre),
+	CONSTRAINT ministra_matricula_prof_fk FOREIGN KEY (matricula_professor) REFERENCES professor (matricula_professor)
+);
+
+CREATE TABLE aluno (
+	matricula_aluno INT,
+	nota_vestibular DECIMAL(5,3) NOT NULL,
+	codigo_curso INT NOT NULL,
+	CONSTRAINT aluno_pk PRIMARY KEY (matricula_aluno),
+	CONSTRAINT aluno_matricula_aluno_fk FOREIGN KEY (matricula_aluno) REFERENCES pessoa (matricula_pessoa),
+	CONSTRAINT aluno_codigo_curso_fk FOREIGN KEY (codigo_curso) REFERENCES curso (codigo_curso)
+);
+
+CREATE TABLE aluno_turma (
+	codigo_disciplina INT,
+	codigo_curso INT,
+	ano_semestre VARCHAR(6),
+	matricula_aluno INT,
+	codigo_projeto INT,
+	CONSTRAINT aluno_turma_pk PRIMARY KEY (codigo_disciplina,codigo_curso,ano_semestre,matricula_aluno),
+	CONSTRAINT aluno_turma_turma_fk FOREIGN KEY (codigo_disciplina,codigo_curso,ano_semestre) REFERENCES turma (codigo_disciplina,codigo_curso,ano_semestre),
+	CONSTRAINT aluno_turma_matricula_aluno_fk FOREIGN KEY (matricula_aluno) REFERENCES aluno (matricula_aluno),
+	CONSTRAINT aluno_turma_codigo_projeto_fk FOREIGN KEY (codigo_projeto) REFERENCES projeto (codigo_projeto)
+);
+
+CREATE TABLE prova (
+	codigo_disciplina INT,
+	codigo_curso INT,
+	ano_semestre VARCHAR(6),
+	matricula_aluno INT,
+	descricao VARCHAR(10),
+	nota DECIMAL(3,1) NOT NULL,
+	CONSTRAINT prova_pk PRIMARY KEY (codigo_disciplina,codigo_curso,ano_semestre,matricula_aluno,descricao),
+	CONSTRAINT prova_aluno_turma_fk FOREIGN KEY (codigo_disciplina,codigo_curso,ano_semestre,matricula_aluno) REFERENCES aluno_turma (codigo_disciplina,codigo_curso,ano_semestre,matricula_aluno)
+);
+
+CREATE TABLE monitoria (
+	codigo_disciplina INT,
+	codigo_curso INT,
+	ano_semestre VARCHAR(6),
+	matricula_aluno INT,
+	matricula_professor INT NOT NULL,
+	CONSTRAINT monitoria_pk PRIMARY KEY (codigo_disciplina,codigo_curso,ano_semestre,matricula_aluno),
+	CONSTRAINT monitoria_turma_fk FOREIGN KEY (codigo_disciplina,codigo_curso,ano_semestre) REFERENCES turma (codigo_disciplina,codigo_curso,ano_semestre),
+	CONSTRAINT monitoria_matricula_aluno_fk FOREIGN KEY (matricula_aluno) REFERENCES aluno (matricula_aluno),
+	CONSTRAINT monitoria_matricula_prof_fk FOREIGN KEY (matricula_professor) REFERENCES professor (matricula_professor)
+);
+
+-- Banco de Dados Universidade
+-- Atividade Prática de SQL para entrega
+-- Esta atividade compõe a nota do módulo 2
+-- Envio: classroom - até final da aula
+
+-- Considerando o banco de dados da Universidade, faça as seguintes
+-- consultas:
+
+-- 1. Selecione o nome dos alunos cujo a nota da prova final foi maior que a
+-- média da turma no semestre de 2010.2 e ordene as notas de forma
+-- decrescente;
+
+select nome, avg(pv.nota),  pv.descricao from aluno a
+join pessoa p on p.matricula_pessoa = a.matricula_aluno
+join prova pv on pv.matricula_aluno=a.matricula_aluno
+where pv.descricao='FINAL' and pv.nota > (select avg(nota) from prova where descricao='FINAL')
+group by nome
+
+select avg(nota) from prova where descricao='FINAL'
+
+-- 2. Selecione os professores que não possuem monitores
+
+select nome from professor pf join
+pessoa ps on ps.matricula_pessoa=pf.matricula_professor
+where pf.matricula_professor not in(select matricula_professor from monitoria);
+
+
+-- 3. Selecione a matrícula dos alunos que tiveram a nota do vestibular
+-- maior que a nota média dos alunos
+
+select matricula_aluno from aluno a
+ where a.nota_vestibular > (select avg(aluno.nota_vestibular) from aluno);
+
+-- 4. Retorne o nome e o sexo dos professores que ministram disciplinas em
+-- mais de uma turma, independentemente do período;
+
+select p.nome, p.sexo from pessoa p
+join professor prof on p.matricula_pessoa = prof.matricula_professor
+join disciplina d on d.matricula_professor = prof.matricula_professor
+join turma t on t.codigo_disciplina = d.codigo_disciplina
+group by p.nome, p.sexo
+having count(distinct t.codigo_curso) > 1;
+
+-- 5. Retorne a média de cada curso por sexo, da prova p2 das turmas do
+-- semestre de 2010.2 e ordene por curso;
+
+select c.nome, ps.sexo, avg(pv.nota) 
+from pessoa ps
+join aluno a on ps.matricula_pessoa = a.matricula_aluno
+join turma t on t.codigo_curso = a.codigo_curso
+join curso c on t.codigo_curso = c.codigo_curso
+join prova pv on pv.matricula_aluno = a.matricula_aluno
+where pv.descricao='p2' and t.ano_semestre='2010.2'
+group by c.nome, ps.sexo
+order by c.nome;
+
+-- 6. Para cada monitor da disciplina de código 3, liste sua matricula, nome,
+-- semestre em que realizou a monitoria e nota final obtida quando cursou
+-- a disciplina. A nota final é calculada de acordo com a média das notas
+-- das provas;
+
+select m.matricula_aluno, p.nome, m.ano_semestre, 
+       (select avg(pr.nota) 
+        from prova pr 
+        where pr.matricula_aluno = m.matricula_aluno 
+          and m.codigo_disciplina = 3) as nota_final
+from monitoria m
+join pessoa p on p.matricula_pessoa = m.matricula_aluno
+where m.codigo_disciplina = 3;
+
+
+-- 7. Selecione o nome dos alunos que foram para final, junto com os nomes
+-- dos professores que ministraram a disciplina em que os alunos foram
+-- para a final;
+
+
+select ps.nome, d.codigo_disciplina, (select nome from pessoa where pessoa.matricula_pessoa=pf.matricula_professor) from aluno a
+join pessoa ps on ps.matricula_pessoa = a.matricula_aluno
+join prova pv on pv.matricula_aluno=a.matricula_aluno
+join disciplina d on d.codigo_disciplina=pv.codigo_disciplina
+join professor pf on pf.matricula_professor=d.matricula_professor
+where descricao = 'FINAL'
+
+-- 8. Retorne o nome do curso que não possui nenhum projeto;
+select nome 
+from curso c
+where c.codigo_curso not in (
+    select at.codigo_curso 
+    from aluno_turma at
+    join projeto p on at.codigo_projeto = p.codigo_projeto
+);
+
+
+-- 9. Para cada professor que lecionou mais de uma disciplina no ano de
+-- 2009 liste o número da matrícula, nome e data de admissão, bem como
+-- a quantidade de disciplinas lecionadas;
+
+
+select prof.matricula_professor, p.nome, prof.data_admissao, count(distinct d.codigo_disciplina) as quantidade_disciplinas
+from professor prof
+join pessoa p on p.matricula_pessoa = prof.matricula_professor
+join disciplina d on d.matricula_professor = prof.matricula_professor
+join turma t on t.codigo_disciplina = d.codigo_disciplina
+where t.ano_semestre = '2009'
+group by prof.matricula_professor, p.nome, prof.data_admissao
+having count(distinct d.codigo_disciplina) > 1;
+
+-- 10. Selecione o nome do curso e o código do aluno com a maior nota do
+-- vestibular, para cada curso;
+
+select c.nome, matricula_aluno from curso c
+join aluno a on a.codigo_curso=c.codigo_curso
+where nota_vestibular in (select max(nota_vestibular) from aluno group by codigo_curso)
+group by c.nome, a.matricula_aluno
+
+
+
+# ------------------------------------------------------ REVISAO 13 MAIO
+
+-- Considerando o banco de dados da Universidade, faça as seguintes
+-- consultas:
+
+-- 1. Selecione o nome do professor que mais ministrou disciplinas;
+
+
+-- 2. Retorne o nome e a data de admissão dos professores que ministram
+-- mais que 4 disciplinas;
+
+-- 3. Retorne a quantidade de alunos que trabalharam em projetos no
+-- período de 2010.1;
+
+-- 4. Apresente a quantidade de monitoria dada por aluno;
+
+-- 5. Crie uma consulta que retorne a matricula e nome dos alunos, bem
+-- como o nome do projeto que eles participaram, apenas daqueles
+-- projetos que obtiveram conceito Regular;
+
+-- 6. Crie uma consulta que retorne a quantidade de alunos matriculados por
+-- semestre na disciplina 2;
+
+-- 7. Selecione a quantidade de alunos matriculados em turmas, em cada
+-- ano/semestre;
+
+-- 8. Selecione o nome das alunas mulheres que cursam estatística;
+
+-- 9. Mostre quantos monitores os professores de Matemática possuem;
+
+-- 10. Retorne a matrícula e o nome dos alunos que já foram monitores;
+
+-- 11. Retorne todos os monitores cujo o nome inicie com a letra A,
+
+-- juntamente com a matrícula do professor responsável pela monitoria;

@@ -1,0 +1,231 @@
+
+DROP TABLE IF EXISTS reserva;
+
+DROP TABLE IF EXISTS barco;
+
+CREATE TABLE barco (
+    id_barco integer,
+    nome_barco varchar(45),
+    cor varchar(45),
+    PRIMARY KEY (id_barco)
+);
+
+INSERT INTO barco VALUES (101,'Interlake','azul'),(102,'Interlake','vermelho'),(103,'Clipper','verde'),(104,'Marine','vermelho');
+
+
+DROP TABLE IF EXISTS marinheiro;
+
+CREATE TABLE marinheiro (
+    id_marinheiro integer,
+    nome_marinheiro varchar(100),
+    avaliacao varchar(45),
+    idade integer,
+    PRIMARY KEY (id_marinheiro)
+);
+
+INSERT INTO marinheiro VALUES (22,'Dustin',"ótimo",45),(29,'Brutus',"ótimo",33),(31,'Lubber',"bom",55),(32,'Andy',"bom",25),(58,'Rusty',"ótimo",35),(64,'Horatio',"ótimo",35),(71,'Zorba',"ótimo",16),(74,'Horatio',"bom",35),(85,'Art',"ótimo",25),(95,'Bob',"ótimo",63);
+
+
+
+CREATE TABLE reserva (
+    id_marinheiro integer,
+    id_barco integer,
+    data_reserva date,
+    PRIMARY KEY(id_marinheiro, id_barco),
+    CONSTRAINT fk_barco FOREIGN KEY (id_barco) REFERENCES barco (id_barco),
+    CONSTRAINT fk_marinheiro FOREIGN KEY (id_marinheiro) REFERENCES marinheiro (id_marinheiro)
+);
+
+INSERT INTO reserva VALUES (22,101,'1998-10-09'),(22,102,'1998-10-10'),(22,103,'1998-08-10'),(22,104,'1998-07-10'),(31,102,'1998-10-11'),(31,103,'1998-11-06'),(31,104,'1998-11-12'),(64,101,'1998-05-09'),(64,102,'1998-05-09'),(74,103,'1998-06-09');
+
+
+
+-- 1. Quais são os nomes e idades dos marinheiros que têm barco vermelho?
+select nome_marinheiro, idade from `marinheiro`
+
+
+
+-- 2. Encontre todos os marinheiros com uma avaliação igual à bom
+select * from marinheiro where avaliacao='bom'
+
+-- 3. Encontre os nomes de marinheiros que reservaram o barco 103
+
+select nome_marinheiro from marinheiro inner join reserva on reserva.id_marinheiro=marinheiro.id_marinheiro where id_barco=103
+
+
+
+-- Encontre os idMarinheiro dos marinheiros que reservaram um
+-- barco vermelho
+select count(m.id_marinheiro) from 
+marinheiro m, barco b, reserva r
+where cor = 'vermelho'
+and m.id_marinheiro = r.id_marinheiro 
+and r.id_barco=b.id_barco
+-- = 1
+
+select count(m.id_marinheiro) from 
+marinheiro m
+join  reserva r on m.id_marinheiro = r.id_marinheiro
+join barco b on r.id_barco = b.id_barco
+where cor = 'vermelho'
+
+
+-- 5. Encontre os nomes dos marinheiros que reservaram um barco
+-- vermelho
+
+select m.nome_marinheiro from 
+marinheiro m, barco b, reserva r
+where cor = 'vermelho'
+and m.id_marinheiro = r.id_marinheiro 
+and r.id_barco=b.id_barco
+-- = 1
+
+select m.nome_marinheiro from 
+marinheiro m
+join  reserva r on m.id_marinheiro = r.id_marinheiro
+join barco b on r.id_barco = b.id_barco
+where cor = 'vermelho'
+
+
+-- 6. Encontre as cores dos barcos reservados por Lubber
+
+select m.nome_marinheiro, b.cor from 
+marinheiro m, barco b, reserva r
+where m.nome_marinheiro = 'Lubber'
+and m.id_marinheiro = r.id_marinheiro 
+and r.id_barco=b.id_barco
+-- = 1
+
+select m.nome_marinheiro, b.cor from 
+marinheiro m
+join  reserva r on m.id_marinheiro = r.id_marinheiro
+join barco b on r.id_barco = b.id_barco
+where m.nome_marinheiro = 'Lubber'
+
+
+-- 7 Encontre os nomes dos marinheiros que reservaram pelo menos um
+-- barco
+
+select m.nome_marinheiro from 
+marinheiro m, reserva r
+where m.id_marinheiro = r.id_marinheiro
+group by m.nome_marinheiro having count(r.data_reserva)>=1
+
+
+select m.nome_marinheiro from 
+marinheiro m
+join reserva r on m.id_marinheiro = r.id_marinheiro
+group by m.nome_marinheiro having count(r.data_reserva)>=1
+
+
+-- 8. Encontre as idades dos marinheiros cujos nomes começam ou
+-- terminam com B e têm no mínimo três caracteres.
+
+
+select idade, nome_marinheiro from marinheiro where nome_marinheiro like 'B__%' or nome_marinheiro like '%__B' and LENGTH(nome_marinheiro)>=3
+
+
+-- 9. Encontre a idade média de todos os marinheiros
+
+select avg(idade) from marinheiro;
+
+
+-- 10. Encontre a idade média dos marinheiros com idade maior que 27
+
+select avg(idade) from marinheiro where idade > 27;
+
+
+-- 11. Encontre o quantidade total de marinheiros
+
+select count(*) from marinheiro;
+
+
+-- 12. Encontre o número de nomes diferentes de marinheiros
+
+select count(DISTINCT(nome_marinheiro)) from marinheiro;
+
+
+-- 13. Encontre a idade do marinheiro mais jovem para cada nível de
+-- avaliação
+
+
+select avaliacao, min(idade) from marinheiro GROUP BY avaliacao
+
+
+-- 14. Encontre a idade do marinheiro mais jovem que tenha no mínimo 18
+-- anos para cada nível de avaliação com no mínimo dois marinheiros
+-- desse tipo
+
+select avaliacao, min(idade) from marinheiro  WHERE idade >=18  GROUP BY avaliacao
+
+
+-- 15. Para cada barco vermelho, encontre o número de reservas desse
+-- barco
+
+select b.nome_barco, count(r.data_reserva) from barco b
+join reserva r on b.id_barco = r.id_barco where b.cor = 'vermelho' GROUP BY r.id_barco
+
+
+-- 16. Encontre a idade media dos marinheiros de cada nível de avaliação
+-- que tenha no mínimo dois marinheiros
+
+select avaliacao, avg(idade) from marinheiro GROUP BY avaliacao HAVING COUNT(*)>1
+
+
+-- 17. Encontre o id dos marinheiros que tenham idade maior que a média
+select id_marinheiro from marinheiro where idade > avg(idade); -- ERRADO so pra lembrar
+
+SELECT id_marinheiro 
+FROM marinheiro 
+WHERE idade > (SELECT AVG(idade) FROM marinheiro);
+
+
+
+-- 18. Encontre o nome dos marinheiros que realizaram mais de 3 reservas
+-- de barcos, cujas cores estejam entre (vermelho, verde, azul).
+
+
+select m.nome_marinheiro from 
+marinheiro m
+join reserva r on m.id_marinheiro = r.id_marinheiro
+join barco b on r.id_barco = b.id_barco where b.cor = 'vermelho' || b.cor ='verde' || b.cor = 'azul'
+GROUP BY m.nome_marinheiro HAVING count(r.data_reserva)>=3
+
+
+select m.nome_marinheiro from 
+marinheiro m
+join reserva r on m.id_marinheiro = r.id_marinheiro
+join barco b on r.id_barco = b.id_barco where b.cor IN ('vermelho', 'verde', 'azul')
+GROUP BY m.nome_marinheiro HAVING count(r.data_reserva) >=3
+
+
+
+-- 19. De acordo com as cores dos barcos, selecione a média das idades
+-- dos marinheiros que os reservaram
+
+select avg(idade), cor from marinheiro m
+
+join reserva r on r.id_marinheiro=m.id_marinheiro
+join barco b on b.id_barco=r.id_barco
+GROUP BY b.cor
+script.sql
+Displaying script.sql.
+Exercício SQL - BD Marinha
+Gabrielle Karine Canalle
+•
+Apr 24 (Edited Apr 24)
+Due Apr 24, 5:00 PM
+
+Exercícios - marinha.pdf
+PDF
+
+SCRIPT-MARINHA.sql
+SQL
+Class comments
+Your work
+Turned in
+
+script.sql
+Unknown
+Work cannot be turned in after the due date
+Private comments

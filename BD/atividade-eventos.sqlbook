@@ -1,0 +1,297 @@
+-- Drop tables in reverse order of dependencies
+DROP TABLE IF EXISTS reserva;
+DROP TABLE IF EXISTS evento;
+DROP TABLE IF EXISTS local_evento;
+DROP TABLE IF EXISTS cliente;
+
+-- Create tables
+CREATE TABLE cliente (
+    cliente_id INT,
+    nome VARCHAR(45),
+    telefone VARCHAR(45),
+    rua VARCHAR(45),
+    bairro VARCHAR(45),
+    numero VARCHAR(45),
+    complemento VARCHAR(45),
+    cep VARCHAR(45),
+    PRIMARY KEY (cliente_id)
+);
+
+CREATE TABLE local_evento (
+    local_id INT,
+    nome VARCHAR(45),
+    descricao VARCHAR(45),
+    PRIMARY KEY (local_id)
+);
+
+CREATE TABLE evento (
+    evento_id INT,
+    descricao VARCHAR(45),
+    data_evento DATE,
+    horario VARCHAR(45),
+    valor FLOAT,
+    local_id INT,
+    cliente_id INT,
+    PRIMARY KEY (evento_id),
+    CONSTRAINT fk_evento_local
+        FOREIGN KEY (local_id)
+        REFERENCES local_evento (local_id)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+    CONSTRAINT fk_evento_cliente
+        FOREIGN KEY (cliente_id)
+        REFERENCES cliente (cliente_id)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+);
+
+CREATE TABLE reserva (
+    reserva_id INT,
+    data_reserva DATE,
+    horario VARCHAR(45),
+    cliente_id INT,
+    evento_id INT,
+    PRIMARY KEY (reserva_id),
+    CONSTRAINT fk_reserva_cliente
+        FOREIGN KEY (cliente_id)
+        REFERENCES cliente (cliente_id)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+    CONSTRAINT fk_reserva_evento
+        FOREIGN KEY (evento_id)
+        REFERENCES evento (evento_id)
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION
+);
+
+
+insert into cliente values(1, 'Pedro', '88281911', 'Rua 1', 'bairro 1', '232', 'casa', '233-23321');
+insert into cliente values(2, 'Maria', '83829192', 'Rua 2', 'bairro 2', '232', 'casa', '233-23321');
+insert into cliente values(3, 'João', '77488282', 'Rua da Luz', 'centro', '5944', 'sobrado', '233-23321');
+insert into cliente values(4, 'José', '32090933', 'Rua Santo Antônio', 'Santo amaro', '1222', 'apto 302', '234-23321');
+insert into cliente values(5, 'Severina', '99201011', 'Rua Dom Pedro', 'Nazaré', '2332', 'apto 90', '984-00911');
+insert into cliente values(6, 'Antônio', '89282823', 'Rua José Alencar', 'cidade alta', '2002', null, '884-23321');
+insert into cliente values(7, 'Paulo', '898998223', 'Rua São Paulo', 'jardim irene', '0032', 'casa', '903-39922');
+insert into cliente values(8, 'Ana', '88292922', 'Rua Rio de Janeiro', 'iputinga', '232', null, '233-23321');
+insert into cliente values(9, 'Luzia', '79292993', 'Rua Amazonas', 'cidade universitária', '232', 'casa', '230-34421');
+insert into cliente values(10, 'Vitor', '32262727', 'Rua Pará', 'casa amarela', '232', 'apto 605', '402-22910');
+
+insert into local_evento values(1, 'Parque de Exposições', 'descrição');
+insert into local_evento values(2, 'Parque Dona Lindu', 'parque a céu aberto');
+insert into local_evento values(3, 'Centro de Eventos', 'Local com área aberta e fechada');
+insert into local_evento values(4, 'Downtown', 'Bar fechado');
+insert into local_evento values(5, 'Pier', 'Pier no Marco zero');
+
+insert into evento values(1, 'evento de rock direcionado a público jovem', '2018/08/03', '22hr', '2993.33', 1, 5);
+insert into evento values(2, 'dia da saúde- exercicios', '2018/03/23', '09hr', '29.33', 5, 2);
+insert into evento values(3, 'banda cover ac/dc', '2018/02/10', '23hr', '35.00', 4, 4);
+insert into evento values(4, 'show da Shakira', '2018/09/12', '23:30hr', '70.00', 3, 3);
+insert into evento values(5, 'Exposição de animais', '2019/01/03', '08hr', '10.00', 2, 1);
+insert into evento values(6, 'Evento de musica', '2019/08/09', '18hr', '150.00', 4, 1);
+
+insert into reserva values(1, '2018/09/02', '17hrs', 2, 5);
+insert into reserva values(2, '2018/10/22', '17hrs', 2, 5);
+insert into reserva values(3, '2018/09/06', '17hrs', 2, 5);
+insert into reserva values(4, '2018/03/12', '17hrs', 2, 5);
+insert into reserva values(5, '2018/12/12', '17hrs', 2, 5);
+insert into reserva values(6, '2018/05/10', '17hrs', 2, 5);
+insert into reserva values(7, '2018/09/01', '17hrs', 2, 5);
+insert into reserva values(8, '2018/02/04', '17hrs', 2, 5);
+insert into reserva values(9, '2018/12/12', '17hrs', 2, 5);
+insert into reserva values(10, '2018/11/27', '17hrs', 2, 5);
+insert into reserva values(11, '2018/07/07', '17hrs', 2, 5);
+insert into reserva values(12, '2018/09/01', '10hrs', 4, 1);
+insert into reserva values(13, '2018/02/04', '23hrs', 1, 4);
+insert into reserva values(14, '2018/12/12', '22hrs', 1, 4);
+insert into reserva values(15, '2018/11/27', '23hrs', 3, 3);
+insert into reserva values(16, '2018/07/07', '11hrs', 4, 2);
+
+-- OBS: prof em alguns exercícios eu coloquei mais de uma resolução, porém desconsidera
+-- Foi so pra exercitar e pra eu me lembrar as formas alternativas de fazer
+
+
+-- 1. Selecione todos os eventos que aconteceram entre a data 2018-01-01
+-- e 2018-06-30.
+
+SELECT * from evento where data_evento BETWEEN '2018-01-01' AND '2018-06-30'
+
+-- 2. Selecione o nome de todos os clientes que começam ou terminam com
+-- 'A' ;
+select * from cliente where UPPER(nome) like 'A%' or UPPER(nome) like '%A'
+
+-- 3. Selecione o número de clientes por bairro;
+
+select count(*), bairro from cliente GROUP BY bairro;
+
+-- 4. Retorne apenas os clientes que possuem o complemento do endereço
+-- sem valor;
+
+select * from cliente where complemento is NULL;
+
+-- 5. Recupere a descrição, o horário e o valor de todos os eventos
+-- agendados para o dia 2018/09/12;.
+
+select descricao, horario, valor from evento where  data_evento = '2018-09-12';
+
+-- 6. (subconsulta) Recupere os dados de todos os locais que não possuem
+-- reserva.
+
+select * from local_evento l
+where l.local_id not in
+(select local_id from reserva)
+
+-- 7. Recupere os nomes dos clientes que realizaram eventos com um valor
+-- maior do que R$2.000,00 no local de nome “Parque de Exposições”.
+
+select * from cliente c
+inner join evento e on c.cliente_id=e.cliente_id
+inner join local_evento l on l.local_id=e.local_id
+where e.valor > 2000 and l.nome ='Parque de Exposições'
+;
+
+-- 8. Liste o nome e telefone dos clientes que não efetuaram nenhuma
+-- reserva
+
+select nome, telefone from cliente
+where cliente_id not in (select cliente_id from reserva)
+
+-- 9. Recupere o nome e o telefone dos clientes que têm reservas para o dia
+-- 2018-11-27 para o local chamado “Downtown”.
+
+select c.nome, telefone from cliente c
+inner join reserva r on c.cliente_id=r.cliente_id
+inner join evento e on e.evento_id=r.evento_id
+inner join local_evento l on l.local_id=e.local_id
+where r.data_reserva='2018-11-27' and l.nome ='Downtown';
+
+-- 10. Liste a quantidade de clientes que realizaram reservas no local
+--  'Centro de Eventos';
+
+-- OBS: Precisa ser um distinct pq o mesmo cliente pode ter feito uma reserva 2x no mesmo local
+select count(distinct c.nome) from cliente c
+inner join reserva r on c.cliente_id=r.cliente_id
+inner join evento e on e.evento_id=r.evento_id
+inner join local_evento l on l.local_id=e.local_id
+where l.nome ='Centro de Eventos';
+
+-- 11. Para cada cliente que realizou mais de 1 reserva no local
+-- 'Parque Dona Lindu' , liste o nome e o bairro.
+
+select c.nome, bairro from cliente c
+inner join evento e on c.cliente_id=e.cliente_id
+inner join local_evento l on l.local_id=e.local_id
+inner join reserva r on r.evento_id=e.evento_id
+where l.nome = 'Parque Dona Lindu'
+group by c.nome, bairro having count(r.reserva_id) > 1 
+
+
+-- 12. Liste a quantidade eventos realizados por local
+
+select count(*), l.nome from local_evento l 
+inner join evento e on l.local_id=e.local_id GROUP BY l.nome
+
+-- 13. Para cada evento que teve menos que 2 reservas, recupere a
+-- descrição do evento e o valor
+
+-- obs: deve ser um left join para retornar também eventos sem nenhuma reserva
+select e.descricao, e.valor from evento e
+left join reserva r on r.evento_id=e.evento_id
+group by e.descricao, e.valor having count(r.reserva_id) < 2
+
+-- 14. Recupere o nome dos Clientes, cujo somatório do valor pago por
+-- eventos ultrapassa 200,00R$
+
+select nome, sum(e.valor) as total from cliente c 
+inner join evento e on e.cliente_id = c.cliente_id
+group by nome having total > 200
+
+-- 15. Retorne os clientes que fizeram reserva no dia 07/07/2018 do
+-- local Parque Dona Lindu; OU os clientes que fizeram um evento no
+-- dia 01/09/2018 no local 'Parque de Exposições';
+
+select distinct c.*
+from cliente c
+inner join reserva r on r.cliente_id = c.cliente_id
+inner join evento e on r.evento_id = e.evento_id
+inner join local_evento l on l.local_id = e.local_id
+where
+    (l.nome = 'Parque Dona Lindu' and r.data_reserva = '2018-07-07')
+    or
+    (l.nome = 'Parque de Exposições' and e.data_evento = '2018-09-01');
+
+
+-- 16. Para cada evento que teve mais de 3 reservas, apresente o
+-- nome do evento e o valor arrecadado com os ingressos
+
+select e.descricao, e.valor, count(r.evento_id), (e.valor*count(r.evento_id)) as total from evento e
+inner join reserva r on r.evento_id=e.evento_id
+group by e.evento_id having count(r.evento_id) > 3
+
+-- 17. (subconsulta) Recupere o nome dos eventos cujo valor de
+-- ingresso é maior do que o valor da média dos eventos
+
+-- Subquerie -> versão final
+select e.descricao from evento e
+where e.valor > (select avg(valor) from evento)
+
+-- Join
+select e.descricao from evento e
+inner join (
+    select avg(valor) as avg_value from evento
+) e2 on e.valor > e2.avg_value
+
+
+-- Window Function
+select descricao from (
+    select descricao, valor, avg(valor) over() as avg_value from evento
+) as subquery where valor > avg_value
+
+
+-- 18. (subconsulta) Liste o nome dos locais que não receberam
+-- eventos no ano de 2018
+
+-- Solução usando extract
+select l.nome from local_evento l
+inner join evento e
+on e.local_id=l.local_id
+where e.local_id not in (select local_id from evento where EXTRACT(YEAR FROM data_evento)='2018')
+
+-- Solução usando Year
+select l.nome from local_evento l
+where l.local_id not in (
+    select local_id from evento where YEAR(data_evento) = 2018
+)
+
+-- select local_id, data_evento from evento where EXTRACT(YEAR FROM data_evento)='2018'
+
+-- select local_id, data_evento from evento where YEAR(data_evento)='2018'
+
+
+-- 19. (subconsulta) Recupere o nome dos locais que já sediaram pelo
+-- menos 2 eventos
+
+-- sem subconsulta
+select l.nome from local_evento l
+inner join evento e 
+on e.local_id = l.local_id
+group by l.nome having count(e.local_id)>=2
+
+-- com subconsulta
+
+select l.nome from local_evento l
+where local_id in (select local_id from evento group by local_id having count(local_id)>=2)
+
+--- 20. (subconsulta) Retorne os eventos cuja quantidade de reservas foi
+-- maior que a média de reservas por evento
+
+select e2.descricao, count(r2.reserva_id) as contagem from evento e2
+inner join reserva r2 on e2.evento_id=r2.evento_id
+group by e2.descricao
+having count(r2.reserva_id) > (
+        select avg(contagem) as avg_value from
+            (select count(r1.reserva_id) as contagem from evento e1 inner
+            join reserva r1 on r1.evento_id=e1.evento_id 
+            group by e1.descricao
+        ) as subquery
+
+    )
